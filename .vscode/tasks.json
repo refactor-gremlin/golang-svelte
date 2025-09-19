@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/svelte-NET-Test.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary;ForceNoAlign"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "compose: start observability",
+            "type": "process",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-f",
+                "${workspaceFolder}/observability.compose.yml",
+                "up",
+                "-d"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "compose: stop observability",
+            "type": "process",
+            "command": "docker",
+            "args": [
+                "compose",
+                "-f",
+                "${workspaceFolder}/observability.compose.yml",
+                "stop"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

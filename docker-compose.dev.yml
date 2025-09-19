@@ -1,0 +1,29 @@
+services:
+  web:
+    build:
+      context: ./MySvelteApp.Client
+      dockerfile: Dockerfile.dev
+    ports: ["5173:5173"]
+    volumes:
+      - ./MySvelteApp.Client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=docker-dev
+      - PUBLIC_API_ENDPOINT=http://api:7216
+      - VITE_API_URL=http://api:7216
+    env_file:
+      - ./MySvelteApp.Client/.env
+    working_dir: /app
+
+  api:
+    build:
+      context: .
+      dockerfile: MySvelteApp.Server/Dockerfile.dev
+    ports: ["7216:7216"]
+    volumes:
+      - ./MySvelteApp.Server:/src
+      # Mount the client directory so the server can access it for SPA proxy
+      - ./MySvelteApp.Client:/src/../MySvelteApp.Client
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:7216

@@ -1,0 +1,83 @@
+name: CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+        cache: true
+        cache-dependency-path: |
+          **/*.csproj
+          **/packages.lock.json
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          MySvelteApp.Client/package-lock.json
+
+    - name: Install root dependencies
+      if: ${{ hashFiles('package-lock.json') != '' }}
+      run: npm ci
+
+    - name: Install client dependencies
+      run: npm ci --prefix MySvelteApp.Client
+
+    - name: Build client
+      run: npm run build --prefix MySvelteApp.Client
+
+    - name: Restore .NET dependencies
+      run: dotnet restore svelte-NET-Test.sln
+
+    - name: Build .NET solution
+      run: dotnet build svelte-NET-Test.sln --configuration Release --no-restore
+      # Note: Set SkipClientBuild=true environment variable to skip client build for faster test-only runs
+
+    - name: Run .NET tests
+      run: dotnet test MySvelteApp.Server/Tests/MySvelteApp.Server.Tests.csproj --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Run ast-grep Svelte 5 compliance scan
+      uses: ast-grep/action@v1.3
+      with:
+        version: latest
+        config: sgconfig.yml
+
+    - name: Run client type checking
+      run: npm run check --prefix MySvelteApp.Client
+
+    - name: Run client linting
+      run: npm run lint --prefix MySvelteApp.Client
+
+    - name: Run client unit tests
+      run: npm run test:unit --prefix MySvelteApp.Client
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: |
+          **/test-results.trx

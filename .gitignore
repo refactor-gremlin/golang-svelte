@@ -1,0 +1,42 @@
+### .NET build outputs ###
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.cache
+*.log
+*.user
+*.vs/
+*.dbmdl
+
+# ASP.NET Core specific
+appsettings.*.json
+launchSettings.json
+
+### Node / Svelte ###
+node_modules/
+build/
+dist/
+.svelte-kit/
+
+# lockfiles (optional — if you want reproducible builds, keep these)
+# package-lock.json
+# pnpm-lock.yaml
+# yarn.lock
+
+### Docker ###
+*.pid
+*.seed
+*.tar
+.docker/
+docker-compose.override.yml
+
+### VSCode ###
+.vscode/
+.history/
+
+### OS junk ###
+.DS_Store
+Thumbs.db
+TestResults/

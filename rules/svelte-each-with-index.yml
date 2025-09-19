@@ -1,0 +1,7 @@
+id: svelte-each-with-index
+message: "Svelte {#each} with index"
+severity: info
+language: svelte
+rule:
+  kind: svelte_raw_text
+  regex: '\{#each\s+[^}]+as\s+[^,]+,\s*[^}]+\}'  

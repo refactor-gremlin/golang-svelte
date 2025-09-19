@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+
+export PATH="$HOME/.dotnet/tools:$PATH"
+
+echo "🔍 Running Prettier formatter..."
+(cd MySvelteApp.Client && npm run format)
+
+echo "🔍 Formatting C# code with CSharpier..."
+csharpier format --no-cache MySvelteApp.Server

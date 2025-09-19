@@ -1,0 +1,11 @@
+ruleDirs: [rules]
+
+customLanguages:
+  svelte:
+    libraryPath: ./parsers/svelte.so
+    extensions: [svelte]
+languageInjections:
+  - hostLanguage: svelte
+    rule:
+      pattern: <script$A>$CODE</script>
+    injected: ts
