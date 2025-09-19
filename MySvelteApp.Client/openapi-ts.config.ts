@@ -6,7 +6,7 @@ export default defineConfig({
 	plugins: [
 		{
 			name: '@hey-api/client-fetch', // HTTP client plugin :contentReference[oaicite:3]{index=3}
-			runtimeConfigPath: './src/hey-api.ts' // Runtime config for baseUrl
+			runtimeConfigPath: '../../src/hey-api.ts' // Runtime config for baseUrl
 		},
 		{
 			name: 'zod', // Zod schemas plugin with Zod 4 compatibility

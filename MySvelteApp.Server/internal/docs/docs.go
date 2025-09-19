@@ -15,6 +15,38 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/RandomPokemon": {
+            "get": {
+                "description": "Retrieves a random Pokemon from the PokeAPI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pokemon"
+                ],
+                "summary": "Get a random Pokemon",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RandomPokemonResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Validates credentials and returns a JWT",
@@ -142,6 +174,20 @@ const docTemplate = `{
                 }
             }
         },
+        "RandomPokemonResponse": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "RegisterRequest": {
             "type": "object",
             "properties": {
@@ -161,12 +207,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "MySvelteApp Server API",
-	Description:      "This is the Go implementation of the MySvelteApp backend.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

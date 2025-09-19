@@ -36,6 +36,21 @@ export const LoginRequestSchema = {
     }
 } as const;
 
+export const RandomPokemonResponseSchema = {
+    type: 'object',
+    properties: {
+        image: {
+            type: 'string'
+        },
+        name: {
+            type: 'string'
+        },
+        type: {
+            type: 'string'
+        }
+    }
+} as const;
+
 export const RegisterRequestSchema = {
     type: 'object',
     properties: {

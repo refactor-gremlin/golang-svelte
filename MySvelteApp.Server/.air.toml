@@ -2,7 +2,6 @@ root = "."
 tmp_dir = ".air"
 
 [build]
-# compile with debug flags so breakpoints stick
 cmd = "go build -gcflags 'all=-N -l' -o .air/main ./cmd/server"
 bin = "/home/jens/go/bin/dlv"
 args_bin = [

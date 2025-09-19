@@ -17,11 +17,28 @@ export const zLoginRequest = z.object({
     username: z.optional(z.string())
 });
 
+export const zRandomPokemonResponse = z.object({
+    image: z.optional(z.string()),
+    name: z.optional(z.string()),
+    type: z.optional(z.string())
+});
+
 export const zRegisterRequest = z.object({
     email: z.optional(z.string()),
     password: z.optional(z.string()),
     username: z.optional(z.string())
 });
+
+export const zGetRandomPokemonData = z.object({
+    body: z.optional(z.never()),
+    path: z.optional(z.never()),
+    query: z.optional(z.never())
+});
+
+/**
+ * OK
+ */
+export const zGetRandomPokemonResponse = zRandomPokemonResponse;
 
 export const zPostAuthLoginData = z.object({
     body: zLoginRequest,

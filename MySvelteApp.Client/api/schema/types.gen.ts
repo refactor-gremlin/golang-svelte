@@ -15,11 +15,44 @@ export type LoginRequest = {
     username?: string;
 };
 
+export type RandomPokemonResponse = {
+    image?: string;
+    name?: string;
+    type?: string;
+};
+
 export type RegisterRequest = {
     email?: string;
     password?: string;
     username?: string;
 };
+
+export type GetRandomPokemonData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/RandomPokemon';
+};
+
+export type GetRandomPokemonErrors = {
+    /**
+     * Internal Server Error
+     */
+    500: {
+        [key: string]: string;
+    };
+};
+
+export type GetRandomPokemonError = GetRandomPokemonErrors[keyof GetRandomPokemonErrors];
+
+export type GetRandomPokemonResponses = {
+    /**
+     * OK
+     */
+    200: RandomPokemonResponse;
+};
+
+export type GetRandomPokemonResponse = GetRandomPokemonResponses[keyof GetRandomPokemonResponses];
 
 export type PostAuthLoginData = {
     /**
@@ -86,5 +119,5 @@ export type PostAuthRegisterResponses = {
 export type PostAuthRegisterResponse = PostAuthRegisterResponses[keyof PostAuthRegisterResponses];
 
 export type ClientOptions = {
-    baseUrl: `${string}://${string}` | (string & {});
+    baseUrl: string;
 };

@@ -2,7 +2,7 @@
 
 import type { ClientOptions } from './types.gen';
 import { type ClientOptions as DefaultClientOptions, type Config, createClient, createConfig } from './client';
-import { createClientConfig } from './src/hey-api.ts';
+import { createClientConfig } from '../../src/hey-api.ts';
 
 /**
  * The `createClientConfig()` function will be called on client initialization

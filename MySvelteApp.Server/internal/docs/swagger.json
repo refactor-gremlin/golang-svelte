@@ -1,13 +1,41 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is the Go implementation of the MySvelteApp backend.",
-        "title": "MySvelteApp Server API",
-        "contact": {},
-        "version": "1.0"
+        "contact": {}
     },
-    "basePath": "/",
     "paths": {
+        "/RandomPokemon": {
+            "get": {
+                "description": "Retrieves a random Pokemon from the PokeAPI",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pokemon"
+                ],
+                "summary": "Get a random Pokemon",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RandomPokemonResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Validates credentials and returns a JWT",
@@ -131,6 +159,20 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "RandomPokemonResponse": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
