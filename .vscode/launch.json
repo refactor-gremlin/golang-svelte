@@ -1,45 +1,35 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-            // Use IntelliSense to find out which attributes exist for C# debugging
-            // Use hover for the description of the existing attributes
-            // For further information visit https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md.
-            "name": "Start Application",
-            "type": "coreclr",
-            "request": "launch",
-            "preLaunchTask": "build",
-            // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/MySvelteApp.Server/bin/Debug/net9.0/MySvelteApp.Server.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/MySvelteApp.Server",
-            "stopAtEntry": false,
-            // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            },
-            "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-            },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            }
-        },
-        {
-            "name": "Start Observability",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "docker",
-            "runtimeArgs": [
-                "compose",
-                "-f",
-                "${workspaceFolder}/observability.compose.yml",
-                "up"
-            ],
-            "console": "integratedTerminal",
-            "postDebugTask": "compose: stop observability"
-        }
+      {
+        "name": "Dev: Frontend in Edge",
+        "type": "edge",
+        "request": "launch",
+        "url": "http://localhost:5173",
+        "webRoot": "${workspaceFolder}/MySvelteApp.Client"
+      },
+      {
+        "name": "Attach to Go backend (Delve)",
+        "type": "go",
+        "request": "attach",
+        "mode": "remote",
+        "host": "127.0.0.1",
+        "port": 2345,
+        "showLog": true,
+        "debugAdapter": "legacy",
+        "preLaunchTask": "dev:fullstack",
+        "postDebugTask": "dev:stop",
+        "cwd": "${workspaceFolder}/MySvelteApp.Server"
+      }
     ],
-    "compounds": []
-}
+    "compounds": [
+      {
+        "name": "Dev: Fullstack (Edge + Go attach)",
+        "configurations": [
+          "Attach to Go backend (Delve)",
+          "Dev: Frontend in Edge"
+        ]
+      }
+    ]
+  }
+  

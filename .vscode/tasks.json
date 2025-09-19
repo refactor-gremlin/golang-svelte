@@ -1,42 +1,163 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/svelte-NET-Test.sln",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary;ForceNoAlign"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "compose: start observability",
-            "type": "process",
-            "command": "docker",
-            "args": [
-                "compose",
-                "-f",
-                "${workspaceFolder}/observability.compose.yml",
-                "up",
-                "-d"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "compose: stop observability",
-            "type": "process",
-            "command": "docker",
-            "args": [
-                "compose",
-                "-f",
-                "${workspaceFolder}/observability.compose.yml",
-                "stop"
-            ],
-            "problemMatcher": []
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "frontend:install",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "install",
+        "--no-audit",
+        "--prefer-offline",
+        "--progress",
+        "false"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Client"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "kill:port-8080",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "if command -v fuser >/dev/null 2>&1; then fuser -k -TERM 8080/tcp || true; sleep 0.2; fuser -k -KILL 8080/tcp || true; elif command -v lsof >/dev/null 2>&1; then pids=$(lsof -tiTCP:8080 -sTCP:LISTEN 2>/dev/null || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; else pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\" || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; fi; pkill -f \"/\\.air/main\" 2>/dev/null || true"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "backend:air",
+      "type": "shell",
+      "command": "/home/jens/go/bin/air",
+      "args": [
+        "-c",
+        ".air.toml"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Server",
+        "env": {
+          "GOCACHE": "${workspaceFolder}/MySvelteApp.Server/.cache",
+          "PATH": "/home/jens/go/bin:/usr/local/go/bin:${env:PATH}"
         }
-    ]
+      },
+      "dependsOn": ["kill:port-8080"],
+      "dependsOrder": "sequence",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "air",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(?:([^:\\s]+))(?::(\\d+))?:\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^watching ",
+          "endsPattern": "^API server listening at"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "frontend:generate-api-classes",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "generate-api-classes"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Client"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend:dev",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "dev"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Client"
+      },
+      "dependsOn": [
+        "frontend:install",
+        "frontend:generate-api-classes"
+      ],
+      "dependsOrder": "sequence",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(?:([^:\\s]+))(?::(\\d+))?:\\s*(.*)$",
+          "file": 1,
+          "line": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^VITE ",
+          "endsPattern": "Local:"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "dev:fullstack",
+      "type": "shell",
+      "command": "echo",
+      "args": ["Full-stack dev environment ready"],
+      "dependsOn": ["backend:air", "frontend:dev"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "compose: start observability",
+      "type": "process",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-f",
+        "${workspaceFolder}/observability.compose.yml",
+        "up",
+        "-d"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "compose: stop observability",
+      "type": "process",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-f",
+        "${workspaceFolder}/observability.compose.yml",
+        "stop"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "dev:stop",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "pkill -f 'dlv .* \\\\.air/main' 2>/dev/null || true; pkill -f '/\\\\.air/main' 2>/dev/null || true; pkill -f 'air -c' 2>/dev/null || true; pkill -f 'vite' 2>/dev/null || true; pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\"); if [ -n \"$pids\" ]; then kill -KILL $pids 2>/dev/null || true; fi"
+      ],
+      "problemMatcher": []
+    }
+  ]
 }

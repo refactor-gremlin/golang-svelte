@@ -1,7 +1,7 @@
 import { form, command, query } from '$app/server';
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
-import { postAuthLogin, postAuthRegister, getTestAuth } from '$api/schema/sdk.gen';
+import { postAuthLogin, postAuthRegister } from '$api/schema/sdk.gen';
 import { zAuthErrorResponse } from '$api/schema/zod.gen';
 import { z } from 'zod';
 
@@ -129,34 +129,6 @@ export const logout = command(async () => {
 	return { success: true };
 });
 
-// Get current user query
-export const getCurrentUser = query(async () => {
-	const { cookies } = getRequestEvent();
-
-	const token = cookies.get('auth_token');
-	if (!token) {
-		error(401, 'Not authenticated');
-	}
-
-	// Validate token with backend using generated TestAuth client
-	try {
-		await getTestAuth({
-			headers: {
-				Authorization: `Bearer ${token}`
-			},
-			throwOnError: true as const
-		});
-		return {
-			id: 'user123',
-			email: 'user@example.com',
-			name: 'Test User',
-			token
-		};
-	} catch (err) {
-		console.error('Token validation error:', err);
-		error(401, 'Authentication failed');
-	}
-});
 
 // Check if user is authenticated
 export const isAuthenticated = query(async () => {

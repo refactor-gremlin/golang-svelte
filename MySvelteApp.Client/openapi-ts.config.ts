@@ -1,10 +1,13 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-	input: 'http://localhost:7216/swagger/v1/swagger.json',
+	input: '../MySvelteApp.Server/internal/docs/swagger.json',
 	output: 'api/schema',
 	plugins: [
-		'@hey-api/client-fetch', // HTTP client plugin :contentReference[oaicite:3]{index=3}
+		{
+			name: '@hey-api/client-fetch', // HTTP client plugin :contentReference[oaicite:3]{index=3}
+			runtimeConfigPath: './src/hey-api.ts' // Runtime config for baseUrl
+		},
 		{
 			name: 'zod', // Zod schemas plugin with Zod 4 compatibility
 			compatibilityVersion: 4 // Explicitly use Zod 4
@@ -14,6 +17,5 @@ export default defineConfig({
 			name: '@hey-api/sdk',
 			validator: true // Enable Zod-based runtime validation :contentReference[oaicite:6]{index=6}
 		}
-	],
-	auth: () => localStorage.getItem('authToken') ?? ''
+	]
 });

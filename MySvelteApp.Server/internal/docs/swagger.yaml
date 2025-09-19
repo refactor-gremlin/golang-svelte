@@ -1,0 +1,99 @@
+basePath: /
+definitions:
+  AuthErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  AuthSuccessResponse:
+    properties:
+      token:
+        type: string
+      userId:
+        type: integer
+      username:
+        type: string
+    type: object
+  LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is the Go implementation of the MySvelteApp backend.
+  title: MySvelteApp Server API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Validates credentials and returns a JWT
+      parameters:
+      - description: Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/AuthErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/AuthErrorResponse'
+      summary: Authenticate a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account and returns a JWT
+      parameters:
+      - description: Register Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AuthSuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/AuthErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/AuthErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+swagger: "2.0"

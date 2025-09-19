@@ -1,0 +1,20 @@
+root = "."
+tmp_dir = ".air"
+
+[build]
+# compile with debug flags so breakpoints stick
+cmd = "go build -gcflags 'all=-N -l' -o .air/main ./cmd/server"
+bin = "/home/jens/go/bin/dlv"
+args_bin = [
+  "--headless",
+  "--listen=127.0.0.1:2345",
+  "--api-version=2",
+  "--accept-multiclient",
+  "exec", ".air/main",
+  "--",
+]
+
+include_ext = ["go", "mod", "sum", "env"]
+exclude_dir = ["vendor", ".git", ".air", ".cache", "node_modules", "tmp"]
+delay = 1000
+kill_delay = 500

@@ -4,124 +4,49 @@ export const AuthErrorResponseSchema = {
     type: 'object',
     properties: {
         message: {
-            type: 'string',
-            nullable: true
+            type: 'string'
         }
-    },
-    additionalProperties: false
+    }
 } as const;
 
 export const AuthSuccessResponseSchema = {
     type: 'object',
     properties: {
         token: {
-            type: 'string',
-            nullable: true
+            type: 'string'
         },
         userId: {
-            type: 'integer',
-            format: 'int32'
+            type: 'integer'
         },
         username: {
-            type: 'string',
-            nullable: true
+            type: 'string'
         }
-    },
-    additionalProperties: false
+    }
 } as const;
 
 export const LoginRequestSchema = {
     type: 'object',
     properties: {
-        username: {
-            type: 'string',
-            nullable: true
-        },
         password: {
-            type: 'string',
-            nullable: true
-        }
-    },
-    additionalProperties: false
-} as const;
-
-export const RandomPokemonDtoSchema = {
-    type: 'object',
-    properties: {
-        name: {
-            type: 'string',
-            nullable: true
+            type: 'string'
         },
-        type: {
-            type: 'string',
-            nullable: true
-        },
-        image: {
-            type: 'string',
-            nullable: true
+        username: {
+            type: 'string'
         }
-    },
-    additionalProperties: false
+    }
 } as const;
 
 export const RegisterRequestSchema = {
     type: 'object',
     properties: {
-        username: {
-            type: 'string',
-            nullable: true
-        },
         email: {
-            type: 'string',
-            nullable: true
+            type: 'string'
         },
         password: {
-            type: 'string',
-            nullable: true
+            type: 'string'
+        },
+        username: {
+            type: 'string'
         }
-    },
-    additionalProperties: false
-} as const;
-
-export const WeatherForecastDtoSchema = {
-    type: 'object',
-    properties: {
-        date: {
-            type: 'string',
-            format: 'date'
-        },
-        temperatureC: {
-            type: 'integer',
-            format: 'int32'
-        },
-        summary: {
-            type: 'string',
-            nullable: true
-        },
-        temperatureF: {
-            type: 'integer',
-            format: 'int32',
-            readOnly: true
-        }
-    },
-    additionalProperties: false
-} as const;
-
-export const WeatherForecastDtoWritableSchema = {
-    type: 'object',
-    properties: {
-        date: {
-            type: 'string',
-            format: 'date'
-        },
-        temperatureC: {
-            type: 'integer',
-            format: 'int32'
-        },
-        summary: {
-            type: 'string',
-            nullable: true
-        }
-    },
-    additionalProperties: false
+    }
 } as const;
