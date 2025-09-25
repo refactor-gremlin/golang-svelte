@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -22,6 +27,7 @@ import (
 	"mysvelteapp/server_new/internal/platform/httpserver"
 	"mysvelteapp/server_new/internal/platform/logging"
 	"mysvelteapp/server_new/internal/platform/persistence"
+	"mysvelteapp/server_new/internal/platform/tracing"
 )
 
 func main() {
@@ -32,11 +38,24 @@ func main() {
 
 	logger := logging.NewDefaultLogger()
 
+	// Initialize OpenTelemetry tracing
+	tracingProvider, err := tracing.New(cfg.ServiceName, cfg.ServiceVersion, logger)
+	if err != nil {
+		log.Fatalf("failed to initialize tracing: %v", err)
+	}
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := tracingProvider.Shutdown(ctx); err != nil {
+			log.Printf("failed to shutdown tracing provider: %v", err)
+		}
+	}()
+
 	docs.SwaggerInfo.BasePath = "/"
 	docs.SwaggerInfo.Title = "MySvelteApp Server API"
 	docs.SwaggerInfo.Description = "This is the Go implementation of the MySvelteApp backend."
 
-	engine := httpserver.New(logger)
+	engine := httpserver.New(logger, cfg.ServiceName)
 
 	appDB, err := persistence.NewAppDB(sqlite.Open(cfg.DatabaseDSN), &gorm.Config{})
 	if err != nil {
@@ -70,8 +89,34 @@ func main() {
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	log.Printf("Server listening on http://localhost:%s", cfg.Port)
-	if err := engine.Run(":" + cfg.Port); err != nil {
-		log.Fatalf("server error: %v", err)
+	// Setup graceful shutdown
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: engine,
 	}
+
+	go func() {
+		log.Printf("Server listening on http://localhost:%s", cfg.Port)
+		log.Printf("OpenTelemetry tracing enabled (development mode: stdout exporter)")
+		log.Printf("Service: %s v%s", cfg.ServiceName, cfg.ServiceVersion)
+
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server error: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited")
 }

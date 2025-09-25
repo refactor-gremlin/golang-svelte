@@ -3,14 +3,21 @@ package httpserver
 import (
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"log/slog"
+
+	"github.com/gin-gonic/gin"
+	otelgin "go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 // New constructs a gin.Engine with the baseline middlewares configured.
-func New(logger *slog.Logger) *gin.Engine {
+func New(logger *slog.Logger, serviceName string) *gin.Engine {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
+
+	if serviceName == "" {
+		serviceName = "mysvelteapp-server"
+	}
+	engine.Use(otelgin.Middleware(serviceName))
 
 	if logger != nil {
 		engine.Use(loggingMiddleware(logger))
