@@ -1,49 +1,39 @@
 # Project Architecture & Code Organization Guide
 
-This document serves as a comprehensive guide for AI assistants working on this SvelteKit + .NET full-stack application. It explains the architectural patterns, code organization principles, and where different types of code should live.
+This document serves as a comprehensive guide for AI assistants working on this SvelteKit + Go full-stack application. It explains the architectural patterns, code organization principles, and where different types of code should live.
 
 ## 🏗️ Overall Architecture
 
-This is a **DDD-inspired Clean Architecture** full-stack application using:
+This is a **Clean Architecture** full-stack application using:
 - **Frontend**: SvelteKit 2.22.0 with Svelte 5.0.0
-- **Backend**: .NET 9.0 Web API with DDD tactical patterns
+- **Backend**: Go 1.22.2 with Gin HTTP framework
 - **Communication**: Type-safe remote functions (experimental SvelteKit feature)
-- **Database**: Entity Framework Core (currently in-memory for development)
+- **Database**: SQLite with GORM (currently in-memory for development)
 
-### DDD Characteristics Present ✅
+### Clean Architecture Characteristics Present ✅
 - **Layered Architecture**: Domain → Application → Infrastructure → Presentation
-- **Rich Domain Entities**: Business rules and validation in entities
+- **Dependency Inversion**: Inner layers don't depend on outer layers
 - **Repository Pattern**: Interfaces in Application, implementations in Infrastructure
-- **Application Services**: Orchestrate domain operations and business workflows
-- **Ubiquitous Language**: Business concepts (User, Pokemon, Weather) over technical terms
-- **Bounded Contexts**: Separate contexts for Authentication, Pokemon, Weather
-- **Dependency Inversion**: Domain depends on abstractions defined in Application layer
-
-### DDD Patterns Missing ❌
-- **Aggregates & Aggregate Roots**: No explicit aggregate boundaries
-- **Value Objects**: Email/Username could be immutable value objects
-- **Domain Events**: No domain events for business processes
-- **Domain Services**: Business logic in entities/application services, no pure domain services
-- **Specifications**: No specification pattern for complex queries
-- **Factories**: No domain object factories for complex creation logic
+- **Service Layer**: Application services orchestrate domain operations
+- **Clean Boundaries**: Clear separation of concerns between layers
 
 ## 📁 Directory Structure
 
 ```
-svelte-NET-Test/
+golang-svelte/
 ├── MySvelteApp.Client/          # SvelteKit Frontend
-├── MySvelteApp.Server/          # .NET Backend
-├── CLAUDE.md                    # Development guide for AI assistants
+├── MySvelteApp.Server/          # Go Backend
+├── README.md                    # Project documentation
 └── structure.md                 # This file
 ```
 
 ## 🎯 Key Architectural Principles
 
 ### 1. **Clean Architecture Layers** (Backend)
-- **Domain**: Core business entities and rules
-- **Application**: Use cases, services, DTOs
+- **Domain**: Core business entities and business rules
+- **Application**: Use cases, services, interfaces (ports)
 - **Infrastructure**: External concerns (database, APIs, file system)
-- **Presentation**: API controllers and web interface
+- **Presentation**: HTTP handlers and request/response models
 
 ### 2. **Remote Functions Pattern** (Frontend ↔ Backend)
 - **Query**: Read-only operations with automatic caching
@@ -56,39 +46,31 @@ svelte-NET-Test/
 - Zod schemas generated from OpenAPI spec
 - End-to-end type safety between client and server
 
-## 🔧 Backend Code Organization (.NET)
+## 🔧 Backend Code Organization (Go)
 
-### Domain Layer (`MySvelteApp.Server/Domain/`)
-```csharp
+### Domain Layer (`MySvelteApp.Server/internal/modules/**/domain/`)
+```go
 // 📍 PUT: Business entities and core rules
-MySvelteApp.Server/Domain/
-├── Entities/           # Core business entities
-│   ├── User.cs
-│   ├── Product.cs
-│   └── Order.cs
-└── ValueObjects/       # Domain value objects
-    ├── Email.cs
-    └── Money.cs
+internal/modules/auth/domain/
+├── entities.go          # Core business entities
+├── value_objects.go     # Domain value objects
+└── errors.go           # Domain-specific errors
 ```
 
 **Guidelines:**
 - ✅ Pure business logic, no external dependencies
 - ✅ Entities should encapsulate business rules
 - ✅ Value objects should be immutable
-- ✅ No database or UI concerns
+- ✅ No database or HTTP concerns
 
-### Application Layer (`MySvelteApp.Server/Application/`)
-```csharp
+### Application Layer (`MySvelteApp.Server/internal/modules/**/app/`)
+```go
 // 📍 PUT: Use cases and business logic interfaces
-MySvelteApp.Server/Application/
-├── FeatureName/
-│   ├── DTOs/              # Data Transfer Objects
-│   │   ├── RequestDto.cs
-│   │   └── ResponseDto.cs
-│   ├── IFeatureService.cs # Service interfaces
-│   └── Commands/          # CQRS command objects
-└── Common/
-    └── Exceptions/        # Custom business exceptions
+internal/modules/auth/app/
+├── ports.go            # Service interfaces (ports)
+├── commands.go         # Use case implementations
+├── services.go         # Application services
+└── dtos.go            # Data transfer objects
 ```
 
 **Guidelines:**
@@ -97,41 +79,35 @@ MySvelteApp.Server/Application/
 - ✅ No infrastructure dependencies
 - ✅ Business rules and validation
 
-### Infrastructure Layer (`MySvelteApp.Server/Infrastructure/`)
-```csharp
+### Infrastructure Layer (`MySvelteApp.Server/internal/modules/**/infra/`)
+```go
 // 📍 PUT: External implementations
-MySvelteApp.Server/Infrastructure/
-├── Persistence/          # Database implementations
-│   ├── AppDbContext.cs
-│   └── Repositories/
-│       └── FeatureRepository.cs
-├── External/             # External API clients
-│   └── ExternalApiService.cs
-├── Authentication/       # Auth implementations
-└── Security/            # Security utilities
+internal/modules/auth/infra/
+├── repositories.go     # Database implementations
+├── jwt.go             # JWT token handling
+└── password.go        # Password hashing
 ```
 
 **Guidelines:**
 - ✅ Concrete implementations of Application interfaces
-- ✅ Database operations via Entity Framework
+- ✅ Database operations via GORM
 - ✅ External API integrations
 - ✅ Infrastructure concerns (logging, caching, etc.)
 
-### Presentation Layer (`MySvelteApp.Server/Presentation/`)
-```csharp
-// 📍 PUT: API controllers and models
-MySvelteApp.Server/Presentation/
-├── Controllers/
-│   └── FeatureController.cs
-└── Models/
-    └── ApiModels.cs
+### Presentation Layer (`MySvelteApp.Server/internal/modules/**/api/`)
+```go
+// 📍 PUT: HTTP handlers and models
+internal/modules/auth/api/
+├── handlers.go        # HTTP request handlers
+├── routes.go          # Route definitions
+└── models.go          # HTTP request/response models
 ```
 
 **Guidelines:**
 - ✅ Minimal logic, delegate to Application services
 - ✅ HTTP concerns (routing, status codes, serialization)
 - ✅ Input validation and error handling
-- ✅ API documentation attributes
+- ✅ Swagger documentation
 
 ## 🎨 Frontend Code Organization (SvelteKit)
 
@@ -561,17 +537,19 @@ test('user can login', async ({ page }) => {
 });
 ```
 
-### Server Tests (`MySvelteApp.Server/Tests/`)
-```csharp
-// 📍 PUT: .NET unit and integration tests
-[TestClass]
-public class AuthServiceTests
-{
-    [TestMethod]
-    public async Task Login_ValidCredentials_ReturnsSuccess()
-    {
-        // Test implementation
-    }
+### Server Tests (`MySvelteApp.Server/tests/`)
+```go
+// 📍 PUT: Go unit and integration tests
+package auth_test
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+)
+
+func TestAuthService_Login_ValidCredentials_ReturnsSuccess(t *testing.T) {
+    // Test implementation
+    assert.True(t, true)
 }
 ```
 
@@ -587,10 +565,10 @@ export const login = form(async (formData) => {
 });
 ```
 
-```csharp
-// 📍 PUT: In MySvelteApp.Server/Infrastructure/Authentication/
+```go
+// 📍 PUT: In MySvelteApp.Server/internal/modules/auth/infra/
 // JWT token generation
-// Password hashing (HMACSHA512)
+// Password hashing (bcrypt)
 // Authentication middleware
 ```
 
@@ -675,7 +653,7 @@ export default {
 
 ### Code Generation
 - API clients: `npm run generate-api-classes`
-- Database migrations: `dotnet ef migrations add`
+- Database migrations: `go run ./cmd/server migrate`
 - Type checking: `npm run check`
 
 ## 🔍 Common Patterns & Anti-Patterns
@@ -700,10 +678,10 @@ export default {
 
 | What | Where | Example |
 |------|-------|---------|
-| Business entities | `MySvelteApp.Server/Domain/Entities/` | `User.cs` |
-| Service interfaces | `MySvelteApp.Server/Application/Feature/` | `IUserService.cs` |
-| Service implementations | `MySvelteApp.Server/Infrastructure/Authentication/` | `AuthService.cs` |
-| API controllers | `MySvelteApp.Server/Presentation/Controllers/` | `UserController.cs` |
+| Business entities | `MySvelteApp.Server/internal/modules/**/domain/` | `entities.go` |
+| Service interfaces | `MySvelteApp.Server/internal/modules/**/app/` | `ports.go` |
+| Service implementations | `MySvelteApp.Server/internal/modules/**/infra/` | `repositories.go` |
+| API handlers | `MySvelteApp.Server/internal/modules/**/api/` | `handlers.go` |
 | **Remote functions** | `MySvelteApp.Client/src/routes/**/feature.remote.ts` | `user.remote.ts` |
 | **Page components** | `MySvelteApp.Client/src/routes/**/+page.svelte` | `+page.svelte` |
 | **Server layouts** | `MySvelteApp.Client/src/routes/**/+layout.server.ts` | Auth checks |
