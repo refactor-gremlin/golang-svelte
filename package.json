@@ -1,12 +1,12 @@
 {
     "name": "svelte-net-test",
     "version": "1.0.0",
-    "description": "Svelte .NET Test Application",
+    "description": "Svelte Go Application",
     "scripts": {
-        "dev": "concurrently \"npm run dev --prefix MySvelteApp.Client\" \"dotnet run --project MySvelteApp.Server\"",
+        "dev": "concurrently \"npm run dev --prefix MySvelteApp.Client\" \"cd MySvelteApp.Server && go run ./cmd/server\"",
         "docker:dev": "docker compose -f docker-compose.dev.yml up --build",
         "docker:prod": "docker compose -f docker-compose.yml up --build",
-        "build": "npm run build --prefix MySvelteApp.Client && dotnet build MySvelteApp.Server",
+        "build": "npm run build --prefix MySvelteApp.Client && cd MySvelteApp.Server && go build ./cmd/server",
         "format": "npm run format --prefix MySvelteApp.Client",
         "check": "npm run check --prefix MySvelteApp.Client",
         "test": "echo \"Error: no test specified\" && exit 1",

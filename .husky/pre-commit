@@ -1,9 +1,11 @@
 #!/usr/bin/env sh
 
-export PATH="$HOME/.dotnet/tools:$PATH"
+# Source nvm to make npm available
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 echo "🔍 Running Prettier formatter..."
 (cd MySvelteApp.Client && npm run format)
 
-echo "🔍 Formatting C# code with CSharpier..."
-csharpier format --no-cache MySvelteApp.Server
+echo "🔍 Running Go formatter..."
+(cd MySvelteApp.Server && go fmt ./...)

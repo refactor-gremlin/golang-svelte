@@ -11,25 +11,26 @@ COPY MySvelteApp.Client/. .
 RUN npm run build
 
 # 2) Server build
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-preview-alpine AS server-build
-ARG TARGETARCH
+FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS server-build
 WORKDIR /src/MySvelteApp.Server
 
-# restore
-COPY MySvelteApp.Server/*.csproj ./
-RUN dotnet restore -a $TARGETARCH
+# copy go mod files
+COPY MySvelteApp.Server/go.* ./
+
+# download dependencies
+RUN go mod download
 
 # copy code + static assets
 COPY MySvelteApp.Server/. .
-COPY --from=client-build /src/MySvelteApp.Client/.svelte-kit/output/client ./wwwroot
+COPY --from=client-build /src/MySvelteApp.Client/.svelte-kit/output/client ./static
 
-# publish (no --no-restore)
-RUN dotnet publish -c Release -a $TARGETARCH -o /app/publish
+# build the binary
+RUN go build -o /app/server ./cmd/server
 
 # 3) Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview-alpine
+FROM alpine:latest
 WORKDIR /app
-COPY --from=server-build /app/publish .
+COPY --from=server-build /app/server .
 
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "MySvelteApp.Server.dll"]
+ENTRYPOINT ["./server"]

@@ -12,11 +12,11 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 		return redirect(302, '/login');
 	}
 
-    // No validation endpoint yet; treat presence of token as authenticated
-    return {
-        user: {
-            id: 'authenticated',
-            name: 'User'
-        }
-    };
+	// No validation endpoint yet; treat presence of token as authenticated
+	return {
+		user: {
+			id: 'authenticated',
+			name: 'User'
+		}
+	};
 };

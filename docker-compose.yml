@@ -13,8 +13,5 @@ services:
   api:
     build:
       context: .
-      dockerfile: MySvelteApp.Server/Dockerfile
+      dockerfile: Dockerfile
     ports: ["8080:8080"]
-    # Allow CORS from the web container
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development

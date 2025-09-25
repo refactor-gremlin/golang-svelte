@@ -129,7 +129,6 @@ export const logout = command(async () => {
 	return { success: true };
 });
 
-
 // Check if user is authenticated
 export const isAuthenticated = query(async () => {
 	const { cookies } = getRequestEvent();
