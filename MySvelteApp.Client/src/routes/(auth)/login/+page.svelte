@@ -54,7 +54,7 @@
 				<form
 					{...login.enhance(async ({ submit }) => {
 						if (!form.validateForm()) return;
-						
+
 						try {
 							await submit();
 							toast.success('Login successful!');
@@ -76,10 +76,12 @@
 							bind:value={form.formData.username}
 							oninput={() => form.validateField('username', form.formData.username)}
 							onblur={() => form.validateField('username', form.formData.username)}
-							class={form.errors.username && form.touched.username ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.username && form.touched.username
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.username && form.touched.username}
-							<p class="text-sm text-red-600 mt-1">{form.errors.username}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.username}</p>
 						{/if}
 					</div>
 
@@ -94,10 +96,12 @@
 							bind:value={form.formData.password}
 							oninput={() => form.validateField('password', form.formData.password)}
 							onblur={() => form.validateField('password', form.formData.password)}
-							class={form.errors.password && form.touched.password ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.password && form.touched.password
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.password && form.touched.password}
-							<p class="text-sm text-red-600 mt-1">{form.errors.password}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.password}</p>
 						{/if}
 					</div>
 

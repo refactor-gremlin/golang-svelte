@@ -20,20 +20,22 @@
 
 	const DEFAULT_ERROR_MESSAGE = 'Registration failed. Please try again.';
 
-	const registerSchema = z.object({
-		username: z.string().trim().min(1, 'Username is required'),
-		email: z.string().email('Valid email required'),
-		password: z.string().min(8, 'Password must be at least 8 characters'),
-		confirmPassword: z.string().min(1, 'Please confirm your password')
-	}).superRefine((data, ctx) => {
-		if (data.password !== data.confirmPassword) {
-			ctx.addIssue({
-				code: 'custom',
-				message: 'Passwords do not match',
-				path: ['confirmPassword']
-			});
-		}
-	});
+	const registerSchema = z
+		.object({
+			username: z.string().trim().min(1, 'Username is required'),
+			email: z.string().email('Valid email required'),
+			password: z.string().min(8, 'Password must be at least 8 characters'),
+			confirmPassword: z.string().min(1, 'Please confirm your password')
+		})
+		.superRefine((data, ctx) => {
+			if (data.password !== data.confirmPassword) {
+				ctx.addIssue({
+					code: 'custom',
+					message: 'Passwords do not match',
+					path: ['confirmPassword']
+				});
+			}
+		});
 
 	const form = createFormValidation(registerSchema);
 </script>
@@ -101,28 +103,32 @@
 							bind:value={form.formData.username}
 							oninput={() => form.validateField('username', form.formData.username)}
 							onblur={() => form.validateField('username', form.formData.username)}
-							class={form.errors.username && form.touched.username ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.username && form.touched.username
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.username && form.touched.username}
-							<p class="text-sm text-red-600 mt-1">{form.errors.username}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.username}</p>
 						{/if}
 					</div>
 
 					<div class="space-y-2">
 						<Label for="email">Email address</Label>
-						<Input 
-							id="email" 
-							name="email" 
-							type="email" 
-							placeholder="Enter your email" 
-							required 
+						<Input
+							id="email"
+							name="email"
+							type="email"
+							placeholder="Enter your email"
+							required
 							bind:value={form.formData.email}
 							oninput={() => form.validateField('email', form.formData.email)}
 							onblur={() => form.validateField('email', form.formData.email)}
-							class={form.errors.email && form.touched.email ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.email && form.touched.email
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.email && form.touched.email}
-							<p class="text-sm text-red-600 mt-1">{form.errors.email}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.email}</p>
 						{/if}
 					</div>
 
@@ -143,10 +149,12 @@
 								}
 							}}
 							onblur={() => form.validateField('password', form.formData.password)}
-							class={form.errors.password && form.touched.password ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.password && form.touched.password
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.password && form.touched.password}
-							<p class="text-sm text-red-600 mt-1">{form.errors.password}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.password}</p>
 						{/if}
 					</div>
 
@@ -161,10 +169,12 @@
 							bind:value={form.formData.confirmPassword}
 							oninput={() => form.validateField('confirmPassword', form.formData.confirmPassword)}
 							onblur={() => form.validateField('confirmPassword', form.formData.confirmPassword)}
-							class={form.errors.confirmPassword && form.touched.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}
+							class={form.errors.confirmPassword && form.touched.confirmPassword
+								? 'border-red-500 focus:ring-red-500'
+								: ''}
 						/>
 						{#if form.errors.confirmPassword && form.touched.confirmPassword}
-							<p class="text-sm text-red-600 mt-1">{form.errors.confirmPassword}</p>
+							<p class="mt-1 text-sm text-red-600">{form.errors.confirmPassword}</p>
 						{/if}
 					</div>
 

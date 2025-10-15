@@ -4,25 +4,25 @@ import { error } from '@sveltejs/kit';
 import { postAuthLogin, postAuthRegister } from '$api/schema/sdk.gen';
 import { zAuthErrorResponse } from '$api/schema/zod.gen';
 import { z } from 'zod';
-import { validateFormData, type ExperimentalFormData } from '$lib/utils/server-form-validation';
+import { safeValidateFormData } from '$lib/utils/server-form-validation';
 
 /**
  * Authentication remote functions for SvelteKit experimental remote functions.
- * 
+ *
  * WHY THIS ARCHITECTURE:
  * - Server-side validation ensures data integrity and security
  * - Experimental remote functions provide seamless client-server communication
  * - Zod schemas provide type-safe validation on both client and server
  * - Centralized authentication logic prevents code duplication
  * - JWT token management with secure cookie handling
- * 
+ *
  * SECURITY CONSIDERATIONS:
  * - All form data is validated on the server before processing
  * - Passwords are never logged or exposed in error messages
  * - JWT tokens use httpOnly, secure, and sameSite cookie attributes
  * - Input sanitization prevents injection attacks
  * - Consistent error handling prevents information leakage
- * 
+ *
  * USE CASE:
  * - User authentication (login, register, logout)
  * - Session management via JWT tokens
@@ -60,7 +60,7 @@ const zRegisterFormWithConfirm = zRegisterForm
 
 // Login form handler with automatic validation
 export const login = form(async (formData) => {
-	const { username, password } = validateFormData(formData as unknown as ExperimentalFormData, zLoginForm);
+	const { username, password } = safeValidateFormData(formData, zLoginForm);
 	const { cookies } = getRequestEvent();
 
 	try {
@@ -98,7 +98,7 @@ export const login = form(async (formData) => {
 
 // Registration form handler with automatic validation
 export const register = form(async (formData) => {
-	const { username, email, password } = validateFormData(formData as unknown as ExperimentalFormData, zRegisterFormWithConfirm);
+	const { username, email, password } = safeValidateFormData(formData, zRegisterFormWithConfirm);
 	const registerData = { username, email, password };
 	try {
 		// Use generated API client with ThrowOnError
