@@ -1,6 +1,7 @@
 server:
   http_listen_port: 3200
   http_listen_address: 0.0.0.0
+
 distributor:
   receivers:
     otlp:
@@ -9,6 +10,7 @@ distributor:
           endpoint: 0.0.0.0:4318
         grpc:
           endpoint: 0.0.0.0:4317
+
 storage:
   trace:
     backend: local
@@ -16,10 +18,16 @@ storage:
       path: /var/tempo/wal
     local:
       path: /var/tempo/traces
+
 compactor:
   compaction:
-    block_retention: 48h
-metrics_generator:
-  registry:
-    external_labels:
-      source: tempo
+    block_retention: 168h # 7 days retention
+
+
+
+ingester:
+  lifecycler:
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1

@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -32,7 +31,12 @@ func New(serviceName, serviceVersion string, logger *slog.Logger) (*Provider, er
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),
 			semconv.ServiceVersionKey.String(serviceVersion),
+			semconv.ServiceInstanceIDKey.String(getEnv("SERVICE_INSTANCE_ID", serviceName+"-"+getEnv("HOSTNAME", "localhost"))),
+			semconv.TelemetrySDKLanguageGo,
+			semconv.TelemetrySDKNameKey.String("opentelemetry"),
+			semconv.TelemetrySDKVersionKey.String("1.38.0"),
 			attribute.String("environment", getEnv("ENVIRONMENT", "development")),
+			attribute.String("host.name", getEnv("HOSTNAME", "localhost")),
 		),
 		resource.WithProcess(),
 		resource.WithOS(),
@@ -42,26 +46,16 @@ func New(serviceName, serviceVersion string, logger *slog.Logger) (*Provider, er
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	}
 
-	// Determine exporter based on environment
-	var exporter sdktrace.SpanExporter
-	if isDevelopment() {
-		// Use stdout exporter for local development
-		exporter, err = stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			return nil, fmt.Errorf("failed to create stdout exporter: %w", err)
-		}
-		logger.Info("using stdout trace exporter for local development")
-	} else {
-		// Use OTLP exporter for production/staging
-		exporter, err = otlptracegrpc.New(ctx,
-			otlptracegrpc.WithEndpoint(getEnv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "localhost:4317")),
-			otlptracegrpc.WithInsecure(), // Use for local development, secure for production
-		)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create OTLP exporter: %w", err)
-		}
-		logger.Info("using OTLP trace exporter", "endpoint", getEnv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "localhost:4317"))
+	// Always use OTLP exporter for consistent tracing
+	// Connect directly to Tempo instead of OTEL collector for simpler setup
+	exporter, err := otlptracegrpc.New(ctx,
+		otlptracegrpc.WithEndpoint(getEnv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "localhost:4317")),
+		otlptracegrpc.WithInsecure(), // Use for local development, secure for production
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create OTLP exporter: %w", err)
 	}
+	logger.Info("using OTLP trace exporter (direct to Tempo)", "endpoint", getEnv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", "localhost:4317"))
 
 	// Create tracer provider
 	provider := sdktrace.NewTracerProvider(
@@ -101,10 +95,7 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// isDevelopment checks if we're running in development mode
-func isDevelopment() bool {
-	return getEnv("ENVIRONMENT", "development") == "development"
-}
+
 
 // getEnv gets an environment variable with a fallback value
 func getEnv(key, fallback string) string {

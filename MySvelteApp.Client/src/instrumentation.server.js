@@ -15,7 +15,7 @@ const traceExporter = new OTLPTraceExporter({
 });
 
 const sdk = new NodeSDK({
-	serviceName: process.env.OTEL_SERVICE_NAME ?? 'mysvelteapp-web',
+	serviceName: process.env.OTEL_SERVICE_NAME ?? 'mysvelteapp-client',
 	traceExporter,
 	instrumentations: [getNodeAutoInstrumentations()]
 });

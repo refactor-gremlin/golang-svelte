@@ -57,3 +57,5 @@ Thumbs.db
 # Logs
 *.log
 logs/
+MySvelteApp.Server/.air
+MySvelteApp.Server/.cache
