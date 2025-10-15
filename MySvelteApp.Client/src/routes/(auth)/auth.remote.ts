@@ -4,7 +4,7 @@ import { error } from '@sveltejs/kit';
 import { postAuthLogin, postAuthRegister } from '$api/schema/sdk.gen';
 import { zAuthErrorResponse } from '$api/schema/zod.gen';
 import { z } from 'zod';
-import { safeValidateFormData } from '$lib/utils/server-form-validation';
+import { safeValidateFormData } from '$lib/server/utils/server-form-validation';
 
 /**
  * Authentication remote functions for SvelteKit experimental remote functions.
