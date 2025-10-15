@@ -12,11 +12,30 @@
 	import { Label } from '$lib/components/ui/label';
 	import { register } from '$src/routes/(auth)/auth.remote';
 	import { resolveAuthErrorMessage } from '$lib/auth/error-messages';
+	import { z } from 'zod';
+	import { createFormValidation } from '$lib/composables/client-form-validation';
 
 	let error = $state<string | null>(null);
 	let success = $state<string | null>(null);
 
 	const DEFAULT_ERROR_MESSAGE = 'Registration failed. Please try again.';
+
+	const registerSchema = z.object({
+		username: z.string().trim().min(1, 'Username is required'),
+		email: z.string().email('Valid email required'),
+		password: z.string().min(8, 'Password must be at least 8 characters'),
+		confirmPassword: z.string().min(1, 'Please confirm your password')
+	}).superRefine((data, ctx) => {
+		if (data.password !== data.confirmPassword) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'Passwords do not match',
+				path: ['confirmPassword']
+			});
+		}
+	});
+
+	const form = createFormValidation(registerSchema);
 </script>
 
 <div
@@ -59,6 +78,8 @@
 						error = null;
 						success = null;
 
+						if (!form.validateForm()) return;
+
 						try {
 							await submit();
 							success = 'Registration successful! Please log in.';
@@ -77,12 +98,32 @@
 							type="text"
 							placeholder="Enter your username"
 							required
+							bind:value={form.formData.username}
+							oninput={() => form.validateField('username', form.formData.username)}
+							onblur={() => form.validateField('username', form.formData.username)}
+							class={form.errors.username && form.touched.username ? 'border-red-500 focus:ring-red-500' : ''}
 						/>
+						{#if form.errors.username && form.touched.username}
+							<p class="text-sm text-red-600 mt-1">{form.errors.username}</p>
+						{/if}
 					</div>
 
 					<div class="space-y-2">
 						<Label for="email">Email address</Label>
-						<Input id="email" name="email" type="email" placeholder="Enter your email" required />
+						<Input 
+							id="email" 
+							name="email" 
+							type="email" 
+							placeholder="Enter your email" 
+							required 
+							bind:value={form.formData.email}
+							oninput={() => form.validateField('email', form.formData.email)}
+							onblur={() => form.validateField('email', form.formData.email)}
+							class={form.errors.email && form.touched.email ? 'border-red-500 focus:ring-red-500' : ''}
+						/>
+						{#if form.errors.email && form.touched.email}
+							<p class="text-sm text-red-600 mt-1">{form.errors.email}</p>
+						{/if}
 					</div>
 
 					<div class="space-y-2">
@@ -93,7 +134,20 @@
 							type="password"
 							placeholder="Create a password"
 							required
+							bind:value={form.formData.password}
+							oninput={() => {
+								form.validateField('password', form.formData.password);
+								// Re-validate confirm password when password changes
+								if (form.touched.confirmPassword) {
+									form.validateField('confirmPassword', form.formData.confirmPassword);
+								}
+							}}
+							onblur={() => form.validateField('password', form.formData.password)}
+							class={form.errors.password && form.touched.password ? 'border-red-500 focus:ring-red-500' : ''}
 						/>
+						{#if form.errors.password && form.touched.password}
+							<p class="text-sm text-red-600 mt-1">{form.errors.password}</p>
+						{/if}
 					</div>
 
 					<div class="space-y-2">
@@ -104,10 +158,17 @@
 							type="password"
 							placeholder="Confirm your password"
 							required
+							bind:value={form.formData.confirmPassword}
+							oninput={() => form.validateField('confirmPassword', form.formData.confirmPassword)}
+							onblur={() => form.validateField('confirmPassword', form.formData.confirmPassword)}
+							class={form.errors.confirmPassword && form.touched.confirmPassword ? 'border-red-500 focus:ring-red-500' : ''}
 						/>
+						{#if form.errors.confirmPassword && form.touched.confirmPassword}
+							<p class="text-sm text-red-600 mt-1">{form.errors.confirmPassword}</p>
+						{/if}
 					</div>
 
-					<Button type="submit" class="w-full" disabled={register.pending > 0}>
+					<Button type="submit" class="w-full" disabled={register.pending > 0 || !form.isValid}>
 						{register.pending > 0 ? 'Creating account...' : 'Create account'}
 					</Button>
 

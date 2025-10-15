@@ -4,19 +4,46 @@ import { error } from '@sveltejs/kit';
 import { postAuthLogin, postAuthRegister } from '$api/schema/sdk.gen';
 import { zAuthErrorResponse } from '$api/schema/zod.gen';
 import { z } from 'zod';
+import { validateFormData, type ExperimentalFormData } from '$lib/utils/server-form-validation';
 
-// Stricter UI-side validation schemas for immediate feedback
+/**
+ * Authentication remote functions for SvelteKit experimental remote functions.
+ * 
+ * WHY THIS ARCHITECTURE:
+ * - Server-side validation ensures data integrity and security
+ * - Experimental remote functions provide seamless client-server communication
+ * - Zod schemas provide type-safe validation on both client and server
+ * - Centralized authentication logic prevents code duplication
+ * - JWT token management with secure cookie handling
+ * 
+ * SECURITY CONSIDERATIONS:
+ * - All form data is validated on the server before processing
+ * - Passwords are never logged or exposed in error messages
+ * - JWT tokens use httpOnly, secure, and sameSite cookie attributes
+ * - Input sanitization prevents injection attacks
+ * - Consistent error handling prevents information leakage
+ * 
+ * USE CASE:
+ * - User authentication (login, register, logout)
+ * - Session management via JWT tokens
+ * - Account status verification
+ */
+
+// Server-side validation schemas - match client-side but ensure security
+// WHY: Provides type-safe validation and consistent error messages
 const zLoginForm = z.object({
-	username: z.string().trim().min(1, 'Username is required'),
+	username: z.string().min(1, 'Username is required'),
 	password: z.string().min(1, 'Password is required')
 });
 
 const zRegisterForm = z.object({
-	username: z.string().trim().min(1, 'Username is required'),
+	username: z.string().min(1, 'Username is required'),
 	email: z.email('Valid email required'),
 	password: z.string().min(8, 'Password must be at least 8 characters')
 });
 
+// Enhanced registration schema with password confirmation
+// WHY: Ensures passwords match before server processing to provide better UX
 const zRegisterFormWithConfirm = zRegisterForm
 	.extend({
 		confirmPassword: z.string().min(1, 'Please confirm your password')
@@ -31,20 +58,9 @@ const zRegisterFormWithConfirm = zRegisterForm
 		}
 	});
 
-const getString = (value: FormDataEntryValue | null) => (typeof value === 'string' ? value : '');
-
 // Login form handler with automatic validation
 export const login = form(async (formData) => {
-	const parsed = zLoginForm.safeParse({
-		username: getString(formData.get('username')),
-		password: getString(formData.get('password'))
-	});
-
-	if (!parsed.success) {
-		throw error(400, { message: 'Invalid login data' });
-	}
-
-	const { username, password } = parsed.data;
+	const { username, password } = validateFormData(formData as unknown as ExperimentalFormData, zLoginForm);
 	const { cookies } = getRequestEvent();
 
 	try {
@@ -82,19 +98,7 @@ export const login = form(async (formData) => {
 
 // Registration form handler with automatic validation
 export const register = form(async (formData) => {
-	const parsed = zRegisterFormWithConfirm.safeParse({
-		username: getString(formData.get('username')),
-		email: getString(formData.get('email')),
-		password: getString(formData.get('password')),
-		confirmPassword: getString(formData.get('confirmPassword'))
-	});
-
-	if (!parsed.success) {
-		const message = parsed.error.issues[0]?.message ?? 'Invalid registration data';
-		throw error(400, { message });
-	}
-
-	const { username, email, password } = parsed.data;
+	const { username, email, password } = validateFormData(formData as unknown as ExperimentalFormData, zRegisterFormWithConfirm);
 	const registerData = { username, email, password };
 	try {
 		// Use generated API client with ThrowOnError

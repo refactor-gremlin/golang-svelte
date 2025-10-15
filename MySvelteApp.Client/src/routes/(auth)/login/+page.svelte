@@ -13,8 +13,17 @@
 	import { login } from '$src/routes/(auth)/auth.remote';
 	import { resolveAuthErrorMessage } from '$lib/auth/error-messages';
 	import { toast } from 'svelte-sonner';
+	import { z } from 'zod';
+	import { createFormValidation } from '$lib/composables/client-form-validation';
 
 	const DEFAULT_ERROR_MESSAGE = 'Login failed. Please check your credentials.';
+
+	const loginSchema = z.object({
+		username: z.string().trim().min(1, 'Username is required'),
+		password: z.string().min(1, 'Password is required')
+	});
+
+	const form = createFormValidation(loginSchema);
 </script>
 
 <div
@@ -44,6 +53,8 @@
 			<CardContent>
 				<form
 					{...login.enhance(async ({ submit }) => {
+						if (!form.validateForm()) return;
+						
 						try {
 							await submit();
 							toast.success('Login successful!');
@@ -62,7 +73,14 @@
 							type="text"
 							placeholder="Enter your username"
 							required
+							bind:value={form.formData.username}
+							oninput={() => form.validateField('username', form.formData.username)}
+							onblur={() => form.validateField('username', form.formData.username)}
+							class={form.errors.username && form.touched.username ? 'border-red-500 focus:ring-red-500' : ''}
 						/>
+						{#if form.errors.username && form.touched.username}
+							<p class="text-sm text-red-600 mt-1">{form.errors.username}</p>
+						{/if}
 					</div>
 
 					<div class="space-y-2">
@@ -73,10 +91,17 @@
 							type="password"
 							placeholder="Enter your password"
 							required
+							bind:value={form.formData.password}
+							oninput={() => form.validateField('password', form.formData.password)}
+							onblur={() => form.validateField('password', form.formData.password)}
+							class={form.errors.password && form.touched.password ? 'border-red-500 focus:ring-red-500' : ''}
 						/>
+						{#if form.errors.password && form.touched.password}
+							<p class="text-sm text-red-600 mt-1">{form.errors.password}</p>
+						{/if}
 					</div>
 
-					<Button type="submit" class="w-full" disabled={login.pending > 0}>
+					<Button type="submit" class="w-full" disabled={login.pending > 0 || !form.isValid}>
 						{#if login.pending > 0}
 							Signing in...
 						{:else}
