@@ -95,8 +95,6 @@ func (p *Provider) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-
-
 // getEnv gets an environment variable with a fallback value
 func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
