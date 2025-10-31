@@ -43,8 +43,17 @@ export function createFormValidation<T extends z.ZodType>(schema: T) {
 	 * @param value - Current field value (can be undefined from input binding)
 	 */
 	function validateField(field: string, value: FormDataEntryValue | null | undefined) {
+		// Update formData with the new value (bind:value already updates formData, but ensure it's set)
+		if (value !== undefined && value !== null) {
+			const stringValue = typeof value === 'string' ? value : value.toString();
+			(formData as Record<string, any>)[field] = stringValue;
+		} else if (value === null) {
+			(formData as Record<string, any>)[field] = '';
+		}
+		
 		touched[field] = true;
-		const result = schema.safeParse({ ...formData, [field]: value || null });
+		
+		const result = schema.safeParse(formData);
 
 		if (!result.success) {
 			const fieldError = result.error.issues.find((i) => i.path[0] === field);
@@ -79,7 +88,7 @@ export function createFormValidation<T extends z.ZodType>(schema: T) {
 		return true;
 	}
 
-	const isValid = $derived(Object.keys(errors).length === 0);
+	const _isValid = $derived(Object.keys(errors).length === 0);
 
 	return {
 		formData,
@@ -87,6 +96,9 @@ export function createFormValidation<T extends z.ZodType>(schema: T) {
 		touched,
 		validateField,
 		validateForm,
-		isValid
+		get isValid() {
+			return _isValid;
+		}
 	};
 }
+

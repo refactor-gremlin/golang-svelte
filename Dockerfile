@@ -14,9 +14,12 @@ RUN npm run build
 FROM python:3.11-slim AS server-build
 WORKDIR /src/MySvelteApp.Server
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # copy requirements
 COPY MySvelteApp.Server/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install --system --no-cache -r requirements.txt
 
 # copy code + static assets
 COPY MySvelteApp.Server/. .

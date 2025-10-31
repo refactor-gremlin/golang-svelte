@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse, JSONResponse
 
 from app.config import Settings, load_settings
 from app.database import Database
@@ -81,6 +82,22 @@ def create_app() -> FastAPI:
     # Register routes
     app.include_router(auth_router)
     app.include_router(pokemon_router)
+    
+    # Compatibility routes for Swagger endpoints expected by client
+    @app.get("/swagger/index.html")
+    async def swagger_redirect():
+        """Redirect to FastAPI docs for compatibility with Go backend."""
+        return RedirectResponse(url="/docs")
+    
+    @app.get("/swagger/v1/swagger.json")
+    async def swagger_json():
+        """Return OpenAPI JSON at the path expected by client tools."""
+        return JSONResponse(content=app.openapi())
+    
+    @app.get("/swagger/swagger.json")
+    async def swagger_json_alt():
+        """Alternative Swagger JSON path."""
+        return JSONResponse(content=app.openapi())
     
     return app
 

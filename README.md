@@ -1,8 +1,8 @@
-# Go + SvelteKit Starter
+# Python + SvelteKit Starter
 
-A full-stack application that pairs a Go 1.23 API (Gin + GORM) with a modern SvelteKit 2 frontend. The stack includes generated OpenAPI clients, experimental Svelte remote functions, JWT authentication, and optional observability via OpenTelemetry, Grafana, Tempo, Loki, and Promtail.
+A full-stack application that pairs a Python 3.11+ API (FastAPI + SQLAlchemy) with a modern SvelteKit 2 frontend. The stack includes generated OpenAPI clients, experimental Svelte remote functions, JWT authentication, and optional observability via OpenTelemetry, Grafana, Tempo, Loki, and Promtail.
 
-- Go backend exposes REST endpoints for auth and a Pokémon demo, backed by SQLite and instrumented with OpenTelemetry.
+- Python backend exposes REST endpoints for auth and a Pokémon demo, backed by SQLite and instrumented with OpenTelemetry.
 - SvelteKit frontend consumes the API through generated, type-safe clients and remote functions.
 - Dockerfiles and Compose files cover local development, production builds, and observability tooling.
 
@@ -11,7 +11,7 @@ A full-stack application that pairs a Go 1.23 API (Gin + GORM) with a modern Sve
 ```
 📁 Project Root
 ├── MySvelteApp.Client/      # SvelteKit application (Svelte 5, Tailwind, experimental remote functions)
-├── MySvelteApp.Server/      # Go service (Gin, GORM, JWT, Swagger, OpenTelemetry)
+├── MySvelteApp.Server/      # Python service (FastAPI, SQLAlchemy, JWT, Swagger, OpenTelemetry)
 ├── observability/           # Grafana + Loki + Tempo + Promtail provisioning
 ├── docker-compose*.yml      # Compose files for dev, prod, and observability
 ├── Dockerfile               # Multi-stage build that bundles client + server
@@ -21,16 +21,17 @@ A full-stack application that pairs a Go 1.23 API (Gin + GORM) with a modern Sve
 
 ## Tech Highlights
 
-- **Backend**: Go 1.23, Gin, GORM (SQLite), JWT auth, Swagger docs, modular architecture under `internal/`
+- **Backend**: Python 3.11+, FastAPI, SQLAlchemy (SQLite), JWT auth, Swagger docs, modular architecture under `app/`
 - **Frontend**: SvelteKit 2, Svelte 5 runes, Tailwind CSS 4, shadcn/bits UI, experimental remote functions (queries/forms/commands)
 - **Integration**: `@hey-api/openapi-ts` generates a typed SDK consumed by remote functions such as `src/routes/(app)/pokemon/data.remote.ts`
-- **Observability**: OpenTelemetry tracing (SDK on both Go and SvelteKit), optional Grafana/Loki/Tempo stack via `observability.compose.yml`
-- **Tooling**: Vitest, Playwright, ESLint, Prettier, Husky, Go tests with `go test ./...`
+- **Observability**: OpenTelemetry tracing (SDK on both Python and SvelteKit), optional Grafana/Loki/Tempo stack via `observability.compose.yml`
+- **Tooling**: Vitest, Playwright, ESLint, Prettier, Husky, Python tests with pytest
 
 ## Prerequisites
 
 - Node.js 20+
-- Go 1.23+
+- Python 3.11+
+- uv package manager (install: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Docker & Docker Compose (for container workflows or observability stack)
 
 ## Install Dependencies
@@ -42,8 +43,8 @@ npm install
 # Install SvelteKit dependencies
 npm install --prefix MySvelteApp.Client
 
-# Download Go modules (optional if go build/test runs)
-(cd MySvelteApp.Server && go mod download)
+# Install Python dependencies
+(cd MySvelteApp.Server && uv venv && source .venv/bin/activate && uv pip install -r requirements.txt)
 ```
 
 ## Local Development
@@ -55,7 +56,7 @@ npm run dev
 ```
 
 - SvelteKit dev server: http://localhost:5173
-- Go API: http://localhost:8080
+- Python API: http://localhost:8080
 - Swagger UI: http://localhost:8080/swagger/index.html
 
 Logs for both services stream in the same terminal (via `concurrently`).
@@ -65,7 +66,7 @@ Logs for both services stream in the same terminal (via `concurrently`).
 ```bash
 # API
 cd MySvelteApp.Server
-go run ./cmd/server
+source .venv/bin/activate && uvicorn app.main:app --reload --port 8080
 
 # Frontend (new terminal)
 npm run dev --prefix MySvelteApp.Client
@@ -73,7 +74,7 @@ npm run dev --prefix MySvelteApp.Client
 
 ### Regenerate the API client
 
-The client SDK under `MySvelteApp.Client/src/routes` is generated from the Go Swagger spec. Regenerate after backend changes:
+The client SDK under `MySvelteApp.Client/src/routes` is generated from the Python FastAPI OpenAPI spec. Regenerate after backend changes:
 
 ```bash
 npm run generate-api-classes --prefix MySvelteApp.Client
@@ -82,8 +83,8 @@ npm run generate-api-classes --prefix MySvelteApp.Client
 ## Testing & Quality
 
 ```bash
-# Go unit tests
-(cd MySvelteApp.Server && go test ./...)
+# Python unit tests
+(cd MySvelteApp.Server && source .venv/bin/activate && pytest)
 
 # Frontend types + lint + unit tests
 npm run check --prefix MySvelteApp.Client
@@ -99,7 +100,7 @@ npm run test:e2e --prefix MySvelteApp.Client
 - `npm run docker:dev` → starts `docker-compose.dev.yml` with hot-reload mounts (frontend on 5173, API on 8080)
 - `npm run docker:prod` → builds production images via `docker-compose.yml` (frontend served on 3000 through the Node adapter, API on 8080)
 
-The root `Dockerfile` is multi-stage: it builds the SvelteKit client, bundles assets into the Go image, and produces a single binary container exposing port 8080.
+The root `Dockerfile` is multi-stage: it builds the SvelteKit client, bundles assets into the Python image, and produces a container exposing port 8080.
 
 ## Observability Stack
 
@@ -112,11 +113,11 @@ The root `Dockerfile` is multi-stage: it builds the SvelteKit client, bundles as
 
 ## Environment Variables
 
-Backend defaults live in `MySvelteApp.Server/internal/platform/config/config.go`.
+Backend defaults live in `MySvelteApp.Server/app/config.py`.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `SERVER_PORT` | `8080` | Port for the Go HTTP server |
+| `SERVER_PORT` | `8080` | Port for the Python HTTP server |
 | `DATABASE_DSN` | `file:mysvelteapp.db?cache=shared&_fk=1` | SQLite DSN (file stored next to the binary) |
 | `JWT_KEY` | sample key | HMAC secret for JWT signing |
 | `JWT_ISSUER` / `JWT_AUDIENCE` | `mysvelteapp` | JWT metadata |
@@ -140,7 +141,9 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318/v1/traces
 | `/auth/register` | POST | Register a new user (username, email, password) |
 | `/auth/login` | POST | Authenticate and receive a JWT |
 | `/RandomPokemon` | GET | Fetch a random Pokémon demo payload |
-| `/swagger/index.html` | GET | Interactive API reference |
+| `/docs` | GET | Interactive API reference (Swagger UI) |
+| `/swagger/index.html` | GET | Redirects to `/docs` (compatibility) |
+| `/swagger/v1/swagger.json` | GET | OpenAPI JSON schema (compatibility) |
 
 Auth handlers issue JWTs stored as HTTP-only cookies on the frontend (`src/routes/(auth)/auth.remote.ts`). Passwords are hashed with an HMAC-based password hasher before persistence.
 
@@ -170,8 +173,8 @@ npm run format --prefix MySvelteApp.Client
 # Build production artifacts
 npm run build
 
-# Run Go binary with a custom port
-SERVER_PORT=9000 go run ./cmd/server (from MySvelteApp.Server)
+# Run Python server with a custom port
+SERVER_PORT=9000 cd MySvelteApp.Server && uv run uvicorn app.main:app --port 9000
 ```
 
 ## Next Steps

@@ -18,52 +18,116 @@
       "problemMatcher": []
     },
     {
+      "label": "backend:setup-env",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "${workspaceFolder}/MySvelteApp.Server/.vscode/setup-env.sh"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Server",
+        "env": {
+          "PATH": "${env:HOME}/.local/bin:${env:PATH}"
+        }
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
       "label": "kill:port-8080",
       "type": "shell",
       "command": "bash",
       "args": [
         "-lc",
-        "if command -v fuser >/dev/null 2>&1; then fuser -k -TERM 8080/tcp || true; sleep 0.2; fuser -k -KILL 8080/tcp || true; elif command -v lsof >/dev/null 2>&1; then pids=$(lsof -tiTCP:8080 -sTCP:LISTEN 2>/dev/null || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; else pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\" || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; fi; pkill -f \"/\\.air/main\" 2>/dev/null || true"
+        "if command -v fuser >/dev/null 2>&1; then fuser -k -TERM 8080/tcp || true; sleep 0.2; fuser -k -KILL 8080/tcp || true; elif command -v lsof >/dev/null 2>&1; then pids=$(lsof -tiTCP:8080 -sTCP:LISTEN 2>/dev/null || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; else pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\" || true); if [ -n \"$pids\" ]; then echo \"Killing PIDs on :8080: $pids\"; kill -TERM $pids 2>/dev/null || true; sleep 0.2; kill -KILL $pids 2>/dev/null || true; fi; fi"
       ],
       "problemMatcher": []
     },
     {
-      "label": "backend:air",
+      "label": "backend:uvicorn",
       "type": "shell",
-      "command": "/home/jens/go/bin/air",
+      "command": "bash",
       "args": [
         "-c",
-        ".air.toml"
+        "cd ${workspaceFolder}/MySvelteApp.Server && export PATH=\"$HOME/.local/bin:$PATH\" && source .venv/bin/activate && uvicorn app.main:app --host 127.0.0.1 --port 8080 --reload"
       ],
       "options": {
         "cwd": "${workspaceFolder}/MySvelteApp.Server",
         "env": {
-          "GOCACHE": "${workspaceFolder}/MySvelteApp.Server/.cache",
-          "PATH": "/home/jens/go/bin:/usr/local/go/bin:${env:PATH}"
+          "PYTHONPATH": "${workspaceFolder}/MySvelteApp.Server"
         }
       },
-      "dependsOn": ["kill:port-8080"],
+      "dependsOn": ["kill:port-8080", "backend:setup-env"],
       "dependsOrder": "sequence",
       "isBackground": true,
       "problemMatcher": {
-        "owner": "air",
+        "owner": "python",
         "fileLocation": ["relative", "${workspaceFolder}"],
         "pattern": {
-          "regexp": "^(?:([^:\\s]+))(?::(\\d+))?:\\s*(.*)$",
+          "regexp": "^(?:File \"(.*?)\", line (\\d+).*)$",
           "file": 1,
-          "line": 2,
-          "message": 3
+          "line": 2
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^watching ",
-          "endsPattern": "^API server listening at"
+          "beginsPattern": "^INFO:.*Uvicorn running",
+          "endsPattern": "^Application startup complete"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": false
+      }
+    },
+    {
+      "label": "backend:uvicorn-debug",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cd ${workspaceFolder}/MySvelteApp.Server && export PATH=\"$HOME/.local/bin:$PATH\" && source .venv/bin/activate && python -m debugpy --listen 5678 --wait-for-client -m uvicorn app.main:app --host 127.0.0.1 --port 8080 --reload"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/MySvelteApp.Server",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/MySvelteApp.Server"
+        }
+      },
+      "dependsOn": ["kill:port-8080", "backend:setup-env"],
+      "dependsOrder": "sequence",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "python",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(?:File \"(.*?)\", line (\\d+).*)$",
+          "file": 1,
+          "line": 2
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Waiting for client",
+          "endsPattern": "^Application startup complete"
         }
       },
       "presentation": {
         "reveal": "always",
         "panel": "dedicated"
       }
+    },
+    {
+      "label": "backend:wait-ready",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "echo 'Waiting for backend to be ready...' && for i in {1..30}; do if curl -sf http://localhost:8080/openapi.json > /dev/null 2>&1; then echo 'Backend is ready!'; exit 0; fi; sleep 1; done; echo 'Backend failed to start in time'; exit 1"
+      ],
+      "problemMatcher": []
     },
     {
       "label": "frontend:generate-api-classes",
@@ -76,6 +140,8 @@
       "options": {
         "cwd": "${workspaceFolder}/MySvelteApp.Client"
       },
+      "dependsOn": ["backend:wait-ready"],
+      "dependsOrder": "sequence",
       "problemMatcher": []
     },
     {
@@ -90,8 +156,7 @@
         "cwd": "${workspaceFolder}/MySvelteApp.Client"
       },
       "dependsOn": [
-        "frontend:install",
-        "frontend:generate-api-classes"
+        "frontend:install"
       ],
       "dependsOrder": "sequence",
       "isBackground": true,
@@ -120,8 +185,8 @@
       "type": "shell",
       "command": "echo",
       "args": ["Full-stack dev environment ready"],
-      "dependsOn": ["backend:air", "frontend:dev"],
-      "dependsOrder": "sequence",
+      "dependsOn": ["backend:uvicorn", "frontend:dev"],
+      "dependsOrder": "parallel",
       "problemMatcher": []
     },
     {
@@ -155,7 +220,7 @@
       "command": "bash",
       "args": [
         "-lc",
-        "pkill -f 'dlv .* \\\\.air/main' 2>/dev/null || true; pkill -f '/\\\\.air/main' 2>/dev/null || true; pkill -f 'air -c' 2>/dev/null || true; pkill -f 'vite' 2>/dev/null || true; pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\"); if [ -n \"$pids\" ]; then kill -KILL $pids 2>/dev/null || true; fi"
+        "pkill -f 'uvicorn.*app.main:app' 2>/dev/null || true; pkill -f 'debugpy' 2>/dev/null || true; pkill -f 'vite' 2>/dev/null || true; pids=$(ss -lptnH \"( sport = :8080 )\" 2>/dev/null | sed -E \"s/.*pid=([0-9]+),.*/\\1/\"); if [ -n \"$pids\" ]; then kill -KILL $pids 2>/dev/null || true; fi"
       ],
       "problemMatcher": []
     }

@@ -14,7 +14,7 @@
 	import { resolveAuthErrorMessage } from '$lib/auth/error-messages';
 	import { toast } from 'svelte-sonner';
 	import { z } from 'zod';
-	import { createFormValidation } from '$lib/composables/client-form-validation';
+	import { createFormValidation } from '$lib/composables/client-form-validation.svelte';
 
 	const DEFAULT_ERROR_MESSAGE = 'Login failed. Please check your credentials.';
 

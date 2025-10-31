@@ -32,28 +32,36 @@ app/
 ## Prerequisites
 
 - Python 3.11+
-- pip or poetry
+- [uv](https://github.com/astral-sh/uv) package manager
 
 ## Installation
 
-1. Install dependencies:
+1. Install uv (if not already installed):
 ```bash
-pip install -r requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-2. Set up environment variables (copy `.env.example` to `.env` and configure):
+2. Create virtual environment and install dependencies:
+```bash
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -r requirements.txt
+```
+
+3. Set up environment variables (copy `.env.example` to `.env` and configure):
 ```bash
 cp .env.example .env
 ```
 
-3. Run the server:
+4. Run the server:
 ```bash
-python -m app.main
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8080
 ```
 
-Or using uvicorn directly:
+Or using uv directly:
 ```bash
-uvicorn app.main:app --reload --port 8080
+uv run uvicorn app.main:app --reload --port 8080
 ```
 
 ## Configuration

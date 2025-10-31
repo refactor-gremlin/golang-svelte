@@ -13,7 +13,7 @@
 	import { register } from '$src/routes/(auth)/auth.remote';
 	import { resolveAuthErrorMessage } from '$lib/auth/error-messages';
 	import { z } from 'zod';
-	import { createFormValidation } from '$lib/composables/client-form-validation';
+	import { createFormValidation } from '$lib/composables/client-form-validation.svelte';
 
 	let error = $state<string | null>(null);
 	let success = $state<string | null>(null);

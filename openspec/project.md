@@ -1,17 +1,17 @@
 # Project Context
 
 ## Purpose
-MySvelteApp is a modern full-stack application demonstrating best practices in web development with a Go backend and Svelte frontend. The project serves as a template and learning platform for building scalable, type-safe web applications with comprehensive observability.
+MySvelteApp is a modern full-stack application demonstrating best practices in web development with a Python backend and Svelte frontend. The project serves as a template and learning platform for building scalable, type-safe web applications with comprehensive observability.
 
 ## Tech Stack
 
-### Backend (Go 1.23+)
-- **Framework**: Gin Web Framework (v1.11.0)
-- **Database**: SQLite with GORM ORM (v1.31.0)
+### Backend (Python 3.11+)
+- **Framework**: FastAPI (v0.115+)
+- **Database**: SQLite with SQLAlchemy ORM (v2.0+)
 - **Authentication**: JWT tokens with HMACSHA512 password hashing
-- **API Documentation**: Swagger/OpenAPI with gin-swagger
+- **API Documentation**: Swagger/OpenAPI with FastAPI automatic docs
 - **Observability**: OpenTelemetry tracing with Tempo backend
-- **Logging**: Structured logging with slog
+- **Logging**: Structured logging with Python logging
 - **Architecture**: Clean Architecture with DDD patterns
 
 ### Frontend (SvelteKit 5)
@@ -35,12 +35,12 @@ MySvelteApp is a modern full-stack application demonstrating best practices in w
 
 ### Code Style
 
-#### Go Backend
-- **Naming**: Go conventions (PascalCase for exported, camelCase for unexported)
+#### Python Backend
+- **Naming**: Python conventions (snake_case for functions/variables, PascalCase for classes)
 - **File Structure**: Clean Architecture layers (domain, app, infra, api)
-- **Error Handling**: Explicit error returns with proper wrapping
-- **Logging**: Structured logging with contextual fields
-- **Comments**: Public functions and packages must have godoc comments
+- **Error Handling**: Exceptions with custom error types
+- **Logging**: Structured logging with Python logging module
+- **Comments**: Docstrings for all public functions and classes
 
 #### TypeScript/Frontend
 - **Naming**: camelCase for variables, PascalCase for components/types
@@ -53,17 +53,18 @@ MySvelteApp is a modern full-stack application demonstrating best practices in w
 
 #### Backend Architecture
 ```
-├── cmd/server/          # Application entry point
-├── internal/
+├── app/
+│   ├── main.py         # Application entry point
+│   ├── config.py       # Configuration management
+│   ├── database.py     # Database setup
 │   ├── modules/        # Domain modules (auth, pokemon, etc.)
 │   │   ├── app/        # Application layer (use cases)
-│   │   ├── api/        # Interface layer (handlers, routes)
+│   │   ├── api/        # Interface layer (routes, schemas)
+│   │   ├── domain/     # Domain entities
 │   │   └── infra/      # Infrastructure layer (repositories, external APIs)
-│   ├── platform/       # Cross-cutting concerns
-│   │   ├── config/     # Configuration management
-│   │   ├── tracing/    # OpenTelemetry setup
-│   │   └── httpserver/ # HTTP server setup
-│   └── docs/           # Swagger documentation
+│   └── platform/       # Cross-cutting concerns
+│       ├── logging.py  # Logging setup
+│       └── tracing.py  # OpenTelemetry setup
 ```
 
 #### Frontend Architecture
@@ -73,7 +74,7 @@ MySvelteApp is a modern full-stack application demonstrating best practices in w
 - **Route-Based**: File-system routing with layouts
 
 ### Testing Strategy
-- **Backend**: Unit tests with Go's testing package
+- **Backend**: Unit tests with pytest
 - **Frontend**: Vitest for unit testing, Playwright for E2E testing
 - **API Testing**: Integration tests for endpoints
 - **Coverage**: Aim for 80%+ code coverage
@@ -122,7 +123,7 @@ MySvelteApp is a modern full-stack application demonstrating best practices in w
 ## External Dependencies
 
 ### Development Dependencies
-- **Go Modules**: All Go dependencies managed via go.mod
+- **Python Packages**: All Python dependencies managed via requirements.txt and uv
 - **NPM Packages**: Frontend dependencies via package.json
 - **Docker Images**: Official images for all services
 

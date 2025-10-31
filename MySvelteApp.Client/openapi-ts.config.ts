@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 export default defineConfig({
-	input: '../MySvelteApp.Server/internal/docs/swagger.json',
+	input: 'http://localhost:8080/openapi.json',
 	output: 'api/schema',
 	plugins: [
 		{

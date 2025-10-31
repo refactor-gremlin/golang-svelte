@@ -1,35 +1,88 @@
 {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Dev: Frontend in Edge",
-        "type": "edge",
-        "request": "launch",
-        "url": "http://localhost:5173",
-        "webRoot": "${workspaceFolder}/MySvelteApp.Client"
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Dev: Frontend in Edge",
+      "type": "edge",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/MySvelteApp.Client",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*",
+        "webpack:///*": "*",
+        "webpack:///./~/*": "${webRoot}/node_modules/*"
+      }
+    },
+    {
+      "name": "Python: FastAPI",
+      "type": "python",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "8080",
+        "--reload"
+      ],
+      "jinja": true,
+      "justMyCode": false,
+      "cwd": "${workspaceFolder}/MySvelteApp.Server",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/MySvelteApp.Server"
       },
-      {
-        "name": "Attach to Go backend (Delve)",
-        "type": "go",
-        "request": "attach",
-        "mode": "remote",
-        "host": "127.0.0.1",
-        "port": 2345,
-        "showLog": true,
-        "debugAdapter": "legacy",
-        "preLaunchTask": "dev:fullstack",
-        "postDebugTask": "dev:stop",
-        "cwd": "${workspaceFolder}/MySvelteApp.Server"
-      }
-    ],
-    "compounds": [
-      {
-        "name": "Dev: Fullstack (Edge + Go attach)",
-        "configurations": [
-          "Attach to Go backend (Delve)",
-          "Dev: Frontend in Edge"
-        ]
-      }
-    ]
-  }
-  
+      "preLaunchTask": "backend:setup-env",
+      "console": "integratedTerminal",
+      "python": "${workspaceFolder}/MySvelteApp.Server/.venv/bin/python"
+    },
+    {
+      "name": "Python: FastAPI (Attach)",
+      "type": "python",
+      "request": "attach",
+      "host": "localhost",
+      "port": 5678,
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}/MySvelteApp.Server",
+          "remoteRoot": "${workspaceFolder}/MySvelteApp.Server"
+        }
+      ],
+      "justMyCode": false,
+      "jinja": true
+    },
+    {
+      "name": "SvelteKit: Dev Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/MySvelteApp.Client",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Dev: Fullstack (Edge + Python)",
+      "configurations": [
+        "Python: FastAPI",
+        "Dev: Frontend in Edge"
+      ],
+      "preLaunchTask": "dev:fullstack",
+      "stopAll": true
+    },
+    {
+      "name": "Dev: Fullstack (SvelteKit + Python)",
+      "configurations": [
+        "Python: FastAPI",
+        "SvelteKit: Dev Server"
+      ],
+      "preLaunchTask": "dev:fullstack",
+      "stopAll": true
+    }
+  ]
+}
