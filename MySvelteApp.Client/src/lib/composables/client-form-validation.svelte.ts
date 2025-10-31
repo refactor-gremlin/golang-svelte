@@ -50,9 +50,9 @@ export function createFormValidation<T extends z.ZodType>(schema: T) {
 		} else if (value === null) {
 			(formData as Record<string, any>)[field] = '';
 		}
-		
+
 		touched[field] = true;
-		
+
 		const result = schema.safeParse(formData);
 
 		if (!result.success) {
@@ -101,4 +101,3 @@ export function createFormValidation<T extends z.ZodType>(schema: T) {
 		}
 	};
 }
-

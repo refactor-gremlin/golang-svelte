@@ -8,4 +8,8 @@ echo "🔍 Running Prettier formatter..."
 (cd MySvelteApp.Client && npm run format)
 
 echo "🔍 Running Go formatter..."
-(cd MySvelteApp.Server && go fmt ./...)
+if [ -f "MySvelteApp.Server/go.mod" ]; then
+	(cd MySvelteApp.Server && go fmt ./...)
+else
+	echo "⚠️  No Go module found, skipping Go formatting"
+fi
