@@ -22,7 +22,6 @@ import (
 	authtoken "mysvelteapp/server_new/internal/modules/auth/infra/token"
 	pokemonapi "mysvelteapp/server_new/internal/modules/pokemon/api"
 	pokemonapp "mysvelteapp/server_new/internal/modules/pokemon/app"
-	pokemoninfra "mysvelteapp/server_new/internal/modules/pokemon/infra/pokeapi"
 	"mysvelteapp/server_new/internal/platform/config"
 	"mysvelteapp/server_new/internal/platform/httpserver"
 	"mysvelteapp/server_new/internal/platform/logging"
@@ -82,10 +81,8 @@ func main() {
 	authHandlers := authapi.NewHandlers(authService)
 	authapi.RegisterRoutes(engine, authHandlers)
 
-	pokemonAdapter := pokemoninfra.NewAdapter(http.DefaultClient)
-	pokemonService := pokemonapp.NewService(pokemonAdapter)
-	pokemonHandlers := pokemonapi.NewHandlers(pokemonService)
-	pokemonapi.RegisterRoutes(engine, pokemonHandlers)
+	pokemonService := pokemonapp.NewService(http.DefaultClient)
+	pokemonapi.RegisterRoutes(engine, pokemonService)
 
 	engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

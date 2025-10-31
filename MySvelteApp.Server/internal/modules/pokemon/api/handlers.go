@@ -1,42 +1,45 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-
 	pokemonapp "mysvelteapp/server_new/internal/modules/pokemon/app"
 )
 
-// Handlers exposes HTTP endpoints for the pokemon module.
-type Handlers struct {
-	service *pokemonapp.Service
-}
+// GetRandomPokemon handles requests for a random Pokemon.
+//
+// Simplified Data Flow:
+// HTTP GET /RandomPokemon
+// → Context propagation for cancellation support
+// → External API integration (PokeAPI)
+// → RandomPokemonResponse JSON serialization
+//
+// Error Handling:
+// - 503: Upstream Pokemon API outage or failure
+// - 500: Unexpected internal errors
+// - Context cancellation is properly respected
+//
+// External Dependencies:
+// This endpoint relies on the external PokeAPI service being available.
+// Network failures or API outages will result in 503 status codes.
+func GetRandomPokemon(service *pokemonapp.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		pokemon, err := service.GetRandomPokemon(c.Request.Context())
+		if err != nil {
+			c.Error(err) // attach to gin context for observability
 
-// NewHandlers wires the pokemon service into HTTP handlers.
-func NewHandlers(service *pokemonapp.Service) *Handlers {
-	return &Handlers{service: service}
-}
+			var upstreamErr pokemonapp.ExternalAPIError
+			switch {
+			case errors.As(err, &upstreamErr):
+				c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Pokemon service temporarily unavailable"})
+			default:
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get random Pokemon"})
+			}
+			return
+		}
 
-// GetRandomPokemon godoc
-// @Summary Get a random Pokemon
-// @Description Retrieves a random Pokemon from the PokeAPI
-// @Tags pokemon
-// @Accept json
-// @Produce json
-// @Success 200 {object} RandomPokemonResponse
-// @Failure 500 {object} map[string]string
-// @Router /RandomPokemon [get]
-func (h *Handlers) GetRandomPokemon(c *gin.Context) {
-	pokemon, err := h.service.GetRandomPokemon(c.Request.Context())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get random Pokemon"})
-		return
+		c.JSON(http.StatusOK, pokemon)
 	}
-
-	c.JSON(http.StatusOK, RandomPokemonResponse{
-		Name:  pokemon.Name,
-		Type:  pokemon.Type,
-		Image: pokemon.Image,
-	})
 }

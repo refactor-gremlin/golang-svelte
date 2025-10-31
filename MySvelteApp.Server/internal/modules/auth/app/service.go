@@ -1,33 +1,74 @@
 package app
 
+// Package app contains the application service layer for the authentication module.
+// This layer orchestrates business logic and coordinates between different infrastructure components.
+//
+// Data Flow Architecture:
+// API Layer (HTTP) → Service Layer (Business Logic) → Infrastructure Layer (Data/External)
+//
+// The service layer is responsible for:
+// - Business rule enforcement and validation
+// - Coordinating between repositories and external services
+// - Transaction management and data consistency
+// - Domain events and use case orchestration
+//
+// Dependencies are injected via interfaces to maintain loose coupling and testability.
+
 import (
 	"context"
-	"regexp"
+	"fmt"
 	"strings"
 	"unicode"
 
 	authdomain "mysvelteapp/server_new/internal/modules/auth/domain"
 )
 
+// RegisterRequest represents the payload required to create a new user account.
+type RegisterRequest struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginRequest represents the credentials submitted by an existing user.
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// AuthSuccess encapsulates the data returned on successful authentication.
+type AuthSuccess struct {
+	Token    string
+	UserID   uint
+	Username string
+}
+
 const (
-	minUsernameLength = 3
 	minPasswordLength = 8
 	maxPasswordLength = 512
 )
 
-var (
-	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
-	emailRegex    = regexp.MustCompile(`^[^\s@]+@[^\s@.]+\.[^\s@.]+$`)
-)
-
-// Service exposes the authentication use-cases.
+// Service exposes the authentication use-cases and business logic.
+// This service orchestrates the complete authentication flow by coordinating
+// between user persistence, password security, and token generation.
+//
+// Data Flow Dependencies:
+// - UserRepository: Handles user data persistence and retrieval
+// - PasswordHasher: Manages secure password hashing and verification
+// - TokenGenerator: Creates JWT tokens for authenticated sessions
+//
+// All dependencies are injected as interfaces to enable testing and
+// maintain flexibility in implementation choices.
 type Service struct {
-	users  UserRepository
-	hasher PasswordHasher
-	tokens TokenGenerator
+	users  UserRepository // User persistence operations
+	hasher PasswordHasher // Password security operations
+	tokens TokenGenerator // JWT token generation
 }
 
-// NewService wires the service dependencies.
+// NewService creates a new Service instance with injected dependencies.
+// This follows the dependency injection pattern where all external
+// dependencies are provided from the outside, making the service
+// easily testable with mock implementations.
 func NewService(users UserRepository, hasher PasswordHasher, tokens TokenGenerator) *Service {
 	return &Service{
 		users:  users,
@@ -36,7 +77,21 @@ func NewService(users UserRepository, hasher PasswordHasher, tokens TokenGenerat
 	}
 }
 
-// Register creates a new user account when the command is valid.
+// Register creates a new user account after comprehensive validation.
+//
+// Data Flow:
+// 1. Input validation (username, email, password format)
+// 2. Business rule validation (username/email uniqueness)
+// 3. Password hashing with salt generation
+// 4. Domain entity creation with invariants
+// 5. Database persistence
+// 6. JWT token generation for immediate login
+//
+// Error Conditions:
+// - ValidationError: Invalid input format or business rules
+// - ConflictError: Username or email already exists
+// - Repository errors: Database connectivity/operation failures
+// - Token generation errors: JWT service failures
 func (s *Service) Register(ctx context.Context, cmd RegisterRequest) (*AuthSuccess, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -91,7 +146,24 @@ func (s *Service) Register(ctx context.Context, cmd RegisterRequest) (*AuthSucce
 	}, nil
 }
 
-// Login authenticates an existing user with the provided credentials.
+// Login authenticates a user with username and password credentials.
+//
+// Data Flow:
+// 1. Input validation (non-empty username/password)
+// 2. Repository lookup by username
+// 3. Password hash verification against stored hash and salt
+// 4. JWT token generation for authenticated session
+//
+// Security Considerations:
+// - Uses constant-time comparison for password verification
+// - Returns generic error messages to prevent username enumeration
+// - Generates fresh JWT token for each successful login
+//
+// Error Conditions:
+// - ValidationError: Missing username or password
+// - UnauthorizedError: Invalid credentials (generic message)
+// - Repository errors: Database connectivity/operation failures
+// - Token generation errors: JWT service failures
 func (s *Service) Login(ctx context.Context, cmd LoginRequest) (*AuthSuccess, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -136,11 +208,11 @@ func validateRegister(cmd RegisterRequest) error {
 	switch {
 	case username == "":
 		return ValidationError{Message: "Username is required."}
-	case len(username) < minUsernameLength:
-		return ValidationError{Message: "Username must be at least 3 characters long."}
+	case len(username) < authdomain.MinUsernameLength:
+		return ValidationError{Message: fmt.Sprintf("Username must be at least %d characters long.", authdomain.MinUsernameLength)}
 	case len(username) > authdomain.MaxUsernameLength:
-		return ValidationError{Message: "Username must not exceed 64 characters."}
-	case !usernameRegex.MatchString(username):
+		return ValidationError{Message: fmt.Sprintf("Username must not exceed %d characters.", authdomain.MaxUsernameLength)}
+	case !authdomain.ValidUsername(username):
 		return ValidationError{Message: "Username can only contain letters, numbers, and underscores."}
 	}
 
@@ -149,10 +221,8 @@ func validateRegister(cmd RegisterRequest) error {
 	case email == "":
 		return ValidationError{Message: "Email is required."}
 	case len(email) > authdomain.MaxEmailLength:
-		return ValidationError{Message: "Email must not exceed 320 characters."}
-	case strings.Contains(email, ".."):
-		return ValidationError{Message: "Please enter a valid email address."}
-	case !emailRegex.MatchString(email):
+		return ValidationError{Message: fmt.Sprintf("Email must not exceed %d characters.", authdomain.MaxEmailLength)}
+	case !authdomain.ValidEmail(email):
 		return ValidationError{Message: "Please enter a valid email address."}
 	}
 
