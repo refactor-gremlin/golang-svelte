@@ -11,26 +11,27 @@ COPY MySvelteApp.Client/. .
 RUN npm run build
 
 # 2) Server build
-FROM --platform=$BUILDPLATFORM golang:1.22-alpine AS server-build
+FROM python:3.11-slim AS server-build
 WORKDIR /src/MySvelteApp.Server
 
-# copy go mod files
-COPY MySvelteApp.Server/go.* ./
-
-# download dependencies
-RUN go mod download
+# copy requirements
+COPY MySvelteApp.Server/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 # copy code + static assets
 COPY MySvelteApp.Server/. .
 COPY --from=client-build /src/MySvelteApp.Client/.svelte-kit/output/client ./static
 
-# build the binary
-RUN go build -o /app/server ./cmd/server
-
 # 3) Runtime
-FROM alpine:latest
+FROM python:3.11-slim
 WORKDIR /app
-COPY --from=server-build /app/server .
+
+# Copy Python dependencies
+COPY --from=server-build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=server-build /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY --from=server-build /src/MySvelteApp.Server /app
 
 EXPOSE 8080
-ENTRYPOINT ["./server"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
