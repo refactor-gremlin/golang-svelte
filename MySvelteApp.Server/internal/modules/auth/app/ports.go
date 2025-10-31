@@ -24,15 +24,15 @@ type UserRepository interface {
 	// Add persists a new user to the storage system.
 	// Returns an error if the user cannot be stored (duplicate key, constraint violation, etc.)
 	Add(ctx context.Context, user *authdomain.User) error
-	
+
 	// GetByUsername retrieves a user by their unique username.
 	// Returns nil if the user is not found (no error should be returned for not found)
 	GetByUsername(ctx context.Context, username string) (*authdomain.User, error)
-	
+
 	// UsernameExists checks if a username is already taken.
 	// Used for validation during registration to prevent duplicate usernames.
 	UsernameExists(ctx context.Context, username string) (bool, error)
-	
+
 	// EmailExists checks if an email address is already registered.
 	// Used for validation during registration to prevent duplicate accounts.
 	EmailExists(ctx context.Context, email string) (bool, error)
@@ -45,7 +45,7 @@ type PasswordHasher interface {
 	// HashPassword creates a secure hash and salt for the given password.
 	// Returns both hash and salt for storage; never returns empty values for valid passwords.
 	HashPassword(password string) (hash string, salt string, err error)
-	
+
 	// VerifyPassword checks if the provided password matches the stored hash and salt.
 	// Uses constant-time comparison to prevent timing attacks.
 	// Returns true only if the password is correct; errors indicate system failures.
